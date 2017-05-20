@@ -29,6 +29,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
+import javax.swing.border.LineBorder;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.MutableAttributeSet;
 import javax.swing.text.SimpleAttributeSet;
@@ -52,15 +53,21 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 	JTextField right_jtf;
 	JScrollPane right_js;
 	JButton right_jb1, right_jb2, right_jb3;
-	JPanel right_jp1, right_jp2, right_jp3, right_jp4;
+	JPanel right_jp1, right_jp2, right_jp3, right_jp4,right_jp5;
 	private JTextField textField_1;
 	public SipProcessor sipProcessor;
 	private JTextField textField;
 	private StyledDocument doc=null;
 	JMenuBar jm;
+	MyLabel myLabel;
+	
 	/**
 	 * Launch the application.
 	 */
+
+	public MyLabel getMyLabel() {
+		return myLabel;
+	}
 
 	/**
 	 * Create the application.
@@ -214,11 +221,23 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 		right_jb3.setEnabled(false);
 		right_jb3.addActionListener(this);
 		// right_jb3.setOpaque(false);
+		//计时器部分
+		myLabel=new MyLabel();
+		myLabel.setBounds(5, 5, 82, 31);
+		myLabel.setText("00:00:00");
+        myLabel.setBorder(new LineBorder(Color.BLACK));
+        myLabel.setFont(new Font("TimesRoman",Font.BOLD,20));
+        myLabel.setHorizontalAlignment(0);
+        myLabel.setVisible(false);
+//        right_jp5=new JPanel();
+//        right_jp5.setLayout(null);
+//        right_jp5.add(myLabel);
 		right_jp2 = new JPanel();
 		right_jp2.setBackground(new Color(185, 220, 237));
 		right_jp2.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		right_jp2.add(right_jb2);
 		right_jp2.add(right_jb3);
+		right_jp2.add(myLabel);
 		right_jp4 = new JPanel();
 		right_jp4.setForeground(new Color(135, 206, 235));
 		right_jp4.setBackground(new Color(135, 206, 235));

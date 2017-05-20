@@ -12,14 +12,21 @@ public class GUIListener implements CallListener{
 		Call call=event.getSource();
 		if(!call.getState().equals(Call.DISCONNECTED)){
 			chat.getRight_jb2().setEnabled(false);
+			
 		}
 		else{
-			chat.getRight_jb2().setEnabled(true);}
+			chat.getRight_jb2().setEnabled(true);
+			chat.getMyLabel().stopTimer();
+			}
 		if(call.getState().equals(Call.CONNECTED)||call.getState().equals(Call.RINGING)){
 			chat.getRight_jb3().setEnabled(true);
 		}
 		else{
 			chat.getRight_jb3().setEnabled(false);
+		}
+		if(call.getState().equals(Call.CONNECTED)){
+			chat.getMyLabel().setVisible(true);
+			chat.getMyLabel().startTimer();
 		}
 	}
 	

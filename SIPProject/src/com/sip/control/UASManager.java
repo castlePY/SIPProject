@@ -29,6 +29,7 @@ import javax.sip.message.Response;
 
 import com.sip.call.Call;
 import com.sip.call.GUIListener;
+import com.sip.call.TimerListener;
 import com.sip.domain.UserInfo;
 import com.sip.gui.ChatFrame;
 import com.sip.gui.OptionFrame;
@@ -141,9 +142,6 @@ public class UASManager {
 		}
 		System.out.println("服务器端处理Cancel");
 		call.setState(Call.DISCONNECTED);
-		System.out.println("hahala");
-		System.out.println("过了haha");
-		System.out.println(op);
 		op.getDialog().setVisible(false);
 		op.getDialog().dispose();
 		call=null;
@@ -189,6 +187,7 @@ public class UASManager {
 		Call call=hashtable.get(serverTransaction.getDialog().getCallId());
 		String to=fromHeader.getAddress().toString();
 		sipProcessor.setDestination(to.substring(1,to.length()-1));
+//		call.addCallListener(new TimerListener());
 		call.setState(Call.CONNECTED);
 		
 	}
