@@ -51,6 +51,7 @@ public class UASManager {
 	Hashtable<CallIdHeader, Call> hashtable=new Hashtable<CallIdHeader, Call>();
 	Call call;
 	UACManager uacManager;
+	boolean autoCancel=true;
 	public UASManager(SipProcessor sipProcessor) {
 		this.uacManager=sipProcessor.getUac();
 		uacManager.setUASManager(this);
@@ -63,8 +64,9 @@ public class UASManager {
 		this.sessionDescriptionManager=sipProcessor.getSessionDescriptionManager();
 	}
 	public void processRequest(RequestEvent arg0){
-		
 		Request request=arg0.getRequest();
+//		System.out.println("request"+request.toString());
+		messageProcessor.showMessage(request.toString());
 		String method=request.getMethod();
 		ServerTransaction serverTransaction = arg0.getServerTransaction();
 		if(serverTransaction==null){
@@ -81,7 +83,10 @@ public class UASManager {
 				processInvite(serverTransaction,arg0);
 			}
 			else{
-				rejectBusyCall(serverTransaction,arg0);
+				if(call.getState().equals(Call.CONNECTED)){
+					
+					rejectBusyCall(serverTransaction,arg0);
+				}
 			}
 		}
 		else if(method.equals(Request.ACK)){
@@ -126,6 +131,7 @@ public class UASManager {
 		try {
 			Response response=messageFactory.createResponse(Response.BUSY_HERE, arg0.getRequest());
 			setToTag(response, d);
+			messageProcessor.showMessage(response.toString());
 			serverTransaction.sendResponse(response);
 		} catch (ParseException e) {
 			e.printStackTrace();
@@ -142,14 +148,15 @@ public class UASManager {
 		}
 		System.out.println("服务器端处理Cancel");
 		call.setState(Call.DISCONNECTED);
+		autoCancel=false;
 		op.getDialog().setVisible(false);
 		op.getDialog().dispose();
 		call=null;
 		uacManager.setCall(null);
-		new TipFrame("对方挂断了电话");
 		try { 
 			Response cancel=messageFactory.createResponse(Response.OK ,arg0.getRequest());
 			setToTag(cancel, arg0.getDialog());
+			messageProcessor.showMessage(cancel.toString());
 			serverTransaction.sendResponse(cancel);
 			clearText();
 		} catch (ParseException e) {
@@ -159,6 +166,7 @@ public class UASManager {
 		} catch (InvalidArgumentException e) {
 			e.printStackTrace();
 		}
+		new TipFrame("对方挂断了电话");
 		
 	}
 	private void processBye(ServerTransaction serverTransaction, RequestEvent arg0) {
@@ -170,6 +178,7 @@ public class UASManager {
 			uacManager.setCall(null);
 			Response byeOK=messageFactory.createResponse(Response.OK, byeRequest);
 			setToTag(byeOK,serverTransaction.getDialog() );
+			messageProcessor.showMessage(byeOK.toString());
 			serverTransaction.sendResponse(byeOK);
 			clearText();
 			new TipFrame("对方挂断了电话");
@@ -213,6 +222,7 @@ public class UASManager {
 		try {
 			Response response=messageFactory.createResponse(Response.RINGING,request);
 			setToTag(response,dialog);
+			messageProcessor.showMessage(response.toString());
 			serverTransaction.sendResponse(response);
 			
 			new Thread(new Runnable(){
@@ -224,7 +234,7 @@ public class UASManager {
 					if(op.isResult()){
 						answerCall(serverTransaction,arg0);
 					}
-					else{
+					else if(autoCancel){
 						rejectCall(serverTransaction,arg0);
 					}
 				}
@@ -247,6 +257,7 @@ public class UASManager {
 		try {
 			response = messageFactory.createResponse(Response.BUSY_HERE,arg0.getRequest());
 			setToTag(response,dialog);
+			messageProcessor.showMessage(response.toString());
 			serverTransaction.sendResponse(response);
 			call.setState(Call.DISCONNECTED);
 			setCall(null);
@@ -272,6 +283,7 @@ public class UASManager {
 			call.setLocalPort(sessionDescriptionManager.getLocalPort());
 			response.setContent(sessionDescription, contentTypeHeader);
 			response.addHeader(getContactHeader());
+			messageProcessor.showMessage(response.toString());
 			serverTransaction.sendResponse(response);
 		} catch (ParseException e) {
 			e.printStackTrace();

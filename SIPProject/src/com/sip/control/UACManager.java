@@ -29,6 +29,7 @@ import javax.sip.message.Response;
 
 import com.sip.call.Call;
 import com.sip.call.GUIListener;
+import com.sip.call.TimerListener;
 import com.sip.domain.Command;
 import com.sip.domain.UserInfo;
 import com.sip.gui.ChatFrame;
@@ -39,6 +40,8 @@ import com.sip.util.DateFormatUtil;
 import com.sip.util.HashTableUtil;
 
 public class UACManager {
+	boolean flag=true;
+	boolean isTrying=false;
 	String to;
 	SipProcessor sipProcessor;
 	UserInfo userInfo;
@@ -119,18 +122,20 @@ public class UACManager {
 		    processCancel();
 		}
          else{
-        	 SipProvider sipProvider=sipProcessor.getSipProvider();
+        	SipProvider sipProvider=sipProcessor.getSipProvider();
      		this.to=to;
      		Request request=initialRequest(action,message);
-     		
+     		messageProcessor.showMessage(request.toString());
      		try {
      			ClientTransaction clientTransaction = sipProvider.getNewClientTransaction(request);
      			if(request.getMethod().equals(Request.INVITE)){
      				Dialog dialog=clientTransaction.getDialog();
          			call=new Call(request,dialog);
+//         			call.addCallListener(new TimerListener());
          			call.addCallListener(new GUIListener((ChatFrame)messageProcessor));
          			uasManager.setCall(call);
          			HashTableUtil.put(call,dialog);
+         			
      			}
      			
      			clientTransaction.sendRequest();
@@ -167,13 +172,17 @@ public class UACManager {
 			
 			
 	}
-	private void processRealCancel(Dialog dialog) {
+	public void processRealCancel(Dialog dialog) {
 		if(dialog!=null){
-			
+			ClientTransaction clientTransaction=null;
 			ClientTransaction firstTransaction =(ClientTransaction) dialog.getFirstTransaction();
 			try {
 				Request cancel = firstTransaction.createCancel();
-				ClientTransaction clientTransaction = sipProcessor.getSipProvider().getNewClientTransaction(cancel);
+				messageProcessor.showMessage(cancel.toString());
+				if(clientTransaction==null){
+					
+					clientTransaction= sipProcessor.getSipProvider().getNewClientTransaction(cancel);
+				}
 				clientTransaction.sendRequest();
 			} catch (SipException e) {
 				e.printStackTrace();
@@ -185,6 +194,7 @@ public class UACManager {
 			
 			try {
 				Request bye=dialog.createRequest(Request.BYE);
+				messageProcessor.showMessage(bye.toString());
 				ClientTransaction clientTransaction = sipProcessor.getSipProvider().getNewClientTransaction(bye);
 				dialog.sendRequest(clientTransaction);
 			} catch (SipException e) {
@@ -195,8 +205,25 @@ public class UACManager {
 		
 	}
 	public void processResponse(ResponseEvent arg0) {
+		
 		Response response=arg0.getResponse();
 		int statusCode=response.getStatusCode();
+		if(!(statusCode==Response.RINGING)){
+			if(statusCode==Response.TRYING){
+				isTrying=true;
+			}
+			messageProcessor.showMessage(response.toString());
+		}
+		else if(flag&&isTrying){
+			
+				flag=false;
+				messageProcessor.showMessage(response.toString());
+			
+			
+
+		}
+		
+		
 		ClientTransaction clientTransaction=arg0.getClientTransaction();
 		if(clientTransaction==null){
 			System.out.println("´íÎó:ÎÞÊÂÎñ×´Ì¬");
@@ -237,6 +264,7 @@ public class UACManager {
 				System.out.println("200 ok received1");
 				
 			Request ack=clientTransaction.getDialog().createAck(((CSeqHeader)(arg0.getResponse().getHeader(CSeqHeader.NAME))).getSeqNumber());
+			messageProcessor.showMessage(ack.toString());
 			clientTransaction.getDialog().sendAck(ack);
 			call.setRemoteDescription(new String(arg0.getResponse().getRawContent()));
 //			call.setLocalDescription(sessionDescription.toString());

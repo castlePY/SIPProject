@@ -11,5 +11,6 @@ public void setDesdination(String to);
 public void processSendingMessage(String str,Color color,boolean bold);
 public void clearSendingText();
 public void clearToText();
+public void showMessage(String str);
  
 }

@@ -3,6 +3,7 @@ package com.sip.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -23,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -60,7 +62,11 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 	private StyledDocument doc=null;
 	JMenuBar jm;
 	MyLabel myLabel;
-	
+	MessageFrame messageFrame;
+	public MessageFrame getMessageFrame() {
+		return messageFrame;
+	}
+
 	/**
 	 * Launch the application.
 	 */
@@ -78,11 +84,23 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 			userinfo.setInetAddress(InetAddress.getLocalHost());
 			// String ip=.getHostAddress();
 			sipProcessor = new SipProcessor(userinfo, this);
+			EventQueue.invokeLater(new Runnable() {
+				public void run() {
+					try {
+						messageFrame = new MessageFrame();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
 			initialize(userinfo);
 			this.addWindowListener(new WindowAdapter() {
 				public void windowClosing(WindowEvent e){
-					sipProcessor.processWindowClose();
-					System.exit(0);
+					
+						
+						sipProcessor.processWindowClose();
+						System.exit(0);
+					
 				}
 			});
 
@@ -118,7 +136,35 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 		jmenu1.addActionListener(this
 			
 			);
-		JMenu jmenu2=new JMenu("关于");
+		JMenu jmenu2=new JMenu("监控(W)");
+		jmenu2.setMnemonic('W');
+		JMenuItem jmi=new JMenuItem("信令监控");
+		jmi.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				messageFrame.setVisible(true);
+			}
+		});
+		JMenuItem clearItem=new JMenuItem("清空信令");
+		clearItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("进入清空信令界面");
+				OptionFrame op=new OptionFrame();
+				op.showOptionFrame("是否清空信令");
+				if(op.isResult()){
+					messageFrame.getJt().setText("");
+					new TipFrame("信令清空成功");
+				}
+				
+			}
+		});
+		jmenu2.add(jmi);
+		jmenu2.add(clearItem);
+		jmenu2.setMnemonic('M');
 		jm.add(jmenu1);
 		jm.add(jmenu2);
 		this.setJMenuBar(jm);
@@ -349,5 +395,17 @@ public class ChatFrame extends JFrame implements ActionListener, MessageProcesso
 	public void clearToText() {
 		textField.setText("");
 		textPane.setText("");
+	}
+
+	@Override
+	public void showMessage(String str) {
+		messageFrame.getJt().append(str+"\r\n"+splitLine()+"\r\n");;
+	}
+	public String splitLine(){
+		StringBuffer sb=new StringBuffer();
+		for(int i=0;i<=79;i++){
+			sb.append("-");
+		}
+		return sb.toString();
 	}
 }
