@@ -63,8 +63,16 @@ public class UACManager {
 		this.headerFactory=sipProcessor.getHeaderFactory();
 		MessageFactory messageFactory=sipProcessor.getMessageFactory();
 		SipProvider sipProvider=sipProcessor.getSipProvider();
-		String toUsername=to.substring(to.indexOf(':')+1,to.indexOf('@'));
-		String address=to.substring(to.indexOf('@')+1);
+		String toUsername=null;
+		String address=null;
+		try{
+			toUsername=to.substring(to.indexOf(':')+1,to.indexOf('@'));
+			address=to.substring(to.indexOf('@')+1);
+		}
+		catch(Exception e){
+			new TipFrame("请输入正确的通话人信息");
+		}
+		
 		Request request=null;
 		ContentTypeHeader contentTypeHeader;
 		ContactHeader contactHeader=null;
@@ -87,14 +95,20 @@ public class UACManager {
 			Address contactAddress=addressFactory.createAddress(contactUri);
 			contactHeader=headerFactory.createContactHeader(contactAddress);
 			if(action.equals(Command.Text)){
-				CSeqHeader cseqHeader=headerFactory.createCSeqHeader(1l, Request.MESSAGE);
-				request=messageFactory.createRequest(sipRequestURI, Request.MESSAGE, callIdHeader, cseqHeader, fromHeader, toHeader, arrayList, maxForwardsHeader);
-				contentTypeHeader=headerFactory.createContentTypeHeader("text","plain");
-				request.setContent(message, contentTypeHeader);
-				String title="我 "+DateFormatUtil.getDateTime();
-				messageProcessor.processSendingMessage(title, Color.BLUE, true);
-				messageProcessor.processSendingMessage(message, Color.BLACK, false);
-				messageProcessor.clearSendingText();;
+				if(message==null||message.length()==0){
+					new TipFrame("消息不能为空");
+				}
+				else{
+					CSeqHeader cseqHeader=headerFactory.createCSeqHeader(1l, Request.MESSAGE);
+					request=messageFactory.createRequest(sipRequestURI, Request.MESSAGE, callIdHeader, cseqHeader, fromHeader, toHeader, arrayList, maxForwardsHeader);
+					contentTypeHeader=headerFactory.createContentTypeHeader("text","plain");
+					request.setContent(message, contentTypeHeader);
+					String title="我 "+DateFormatUtil.getDateTime();
+					messageProcessor.processSendingMessage(title, Color.BLUE, true);
+					messageProcessor.processSendingMessage(message, Color.BLACK, false);
+					messageProcessor.clearSendingText();
+				}
+				
 			}
 			else if(action.equals(Command.CALL)){
 				CSeqHeader cseqHeader=headerFactory.createCSeqHeader(1l, Request.INVITE);
@@ -141,8 +155,9 @@ public class UACManager {
      			
      			clientTransaction.sendRequest();
      			
-     		} catch (SipException e) {
-     			e.printStackTrace();
+     		} catch (Exception e) {
+    			new TipFrame("请输入正确的通话人信息");
+    			e.printStackTrace();
      		} 
          }
 		
