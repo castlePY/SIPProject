@@ -12,7 +12,7 @@ public class MyLabel extends JLabel {
 	int second = 0;
 	int min = 0;
 	int hour = 0;
-
+//	Thread t; 
 	public void startTimer() {
 		new Thread(new Runnable() {
 
@@ -20,15 +20,17 @@ public class MyLabel extends JLabel {
 			public void run() {
 				df = new DecimalFormat("00");
 				flag = true;
-				if(first){
-					first=false;
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-					
-				}
+				System.out.println("开始计时啦啦啦啦");
+				System.out.println(this+"休眠中");
+//				if(first){
+//					first=false;
+//					try {
+//						Thread.sleep(10);
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//					
+//				}
 				while (flag) {
 					try {
 						Thread.sleep(10);
@@ -59,7 +61,7 @@ public class MyLabel extends JLabel {
 			}
 
 		}).start();
-
+		
 	}
 
 	public void stopTimer() {

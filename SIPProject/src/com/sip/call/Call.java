@@ -22,7 +22,9 @@ public class Call {
 	private String localDescription=null;
 	private int localPort;
 	String oldState;
-	
+	public boolean flag=true;
+	public boolean isTrying=false;
+	public boolean autoCancel=true;
 	public String getLocalDescription() {
 		return localDescription;
 	}

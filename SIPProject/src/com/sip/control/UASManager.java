@@ -51,7 +51,7 @@ public class UASManager {
 	Hashtable<CallIdHeader, Call> hashtable=new Hashtable<CallIdHeader, Call>();
 	Call call;
 	UACManager uacManager;
-	boolean autoCancel=true;
+	
 	public UASManager(SipProcessor sipProcessor) {
 		this.uacManager=sipProcessor.getUac();
 		uacManager.setUASManager(this);
@@ -148,7 +148,7 @@ public class UASManager {
 		}
 		System.out.println("服务器端处理Cancel");
 		call.setState(Call.DISCONNECTED);
-		autoCancel=false;
+		call.autoCancel=false;
 		op.getDialog().setVisible(false);
 		op.getDialog().dispose();
 		call=null;
@@ -234,7 +234,8 @@ public class UASManager {
 					if(op.isResult()){
 						answerCall(serverTransaction,arg0);
 					}
-					else if(autoCancel){
+					else if(call.autoCancel){
+						System.out.println("自己挂断电话");
 						rejectCall(serverTransaction,arg0);
 					}
 				}

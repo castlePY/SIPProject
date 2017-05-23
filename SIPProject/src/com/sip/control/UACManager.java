@@ -40,8 +40,7 @@ import com.sip.util.DateFormatUtil;
 import com.sip.util.HashTableUtil;
 
 public class UACManager {
-	boolean flag=true;
-	boolean isTrying=false;
+	
 	String to;
 	SipProcessor sipProcessor;
 	UserInfo userInfo;
@@ -51,6 +50,7 @@ public class UACManager {
 	SessionDescription sessionDescription ;
 	MessageProcessor messageProcessor;
 	UASManager uasManager;
+	boolean flag=false;
 	UACManager(SipProcessor sipProcessor){
 		this.sipProcessor=sipProcessor;
 		userInfo=sipProcessor.getUserinfo();
@@ -132,6 +132,7 @@ public class UACManager {
      				Dialog dialog=clientTransaction.getDialog();
          			call=new Call(request,dialog);
 //         			call.addCallListener(new TimerListener());
+         			System.out.println("添加GUIListener");
          			call.addCallListener(new GUIListener((ChatFrame)messageProcessor));
          			uasManager.setCall(call);
          			HashTableUtil.put(call,dialog);
@@ -208,55 +209,65 @@ public class UACManager {
 		
 		Response response=arg0.getResponse();
 		int statusCode=response.getStatusCode();
-		if(!(statusCode==Response.RINGING)){
-			if(statusCode==Response.TRYING){
-				isTrying=true;
-			}
-			messageProcessor.showMessage(response.toString());
-		}
-		else if(flag&&isTrying){
-			
-				flag=false;
+		String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
+		if(call.getState()!=call.getOldState()){
+			if(!(statusCode==Response.RINGING)){
+				if(statusCode==Response.TRYING&&method.equals(Request.INVITE)){
+					call.isTrying=true;
+					flag=true;
+				}
 				messageProcessor.showMessage(response.toString());
-			
+			}
+			else if(call.flag){
+					
+				if(call.isTrying||flag){
+						call.flag=false;
+						messageProcessor.showMessage(response.toString());
+					}
+					
+			}
 			
 
-		}
-		
-		
-		ClientTransaction clientTransaction=arg0.getClientTransaction();
-		if(clientTransaction==null){
-			System.out.println("错误:无事务状态");
-		}
-		String method=((CSeqHeader)response.getHeader(CSeqHeader.NAME)).getMethod();
-		
-		if(statusCode==Response.RINGING){
-			if(method.equals(Request.INVITE)){
-				System.out.println("call state"+method);
-				call.setState(Call.RINGING);
+			
+			
+			ClientTransaction clientTransaction=arg0.getClientTransaction();
+			if(clientTransaction==null){
+				System.out.println("错误:无事务状态");
 			}
-		}
-		else if(statusCode==Response.OK){
-			if(method.equals(Request.INVITE)){
-				processInviteOk(arg0,clientTransaction);
-			}
-			else if(method.equals(Request.BYE)||method.equals(Request.CANCEL)){
+			if(statusCode==Response.RINGING){
+				if(method.equals(Request.INVITE)){
+					System.out.println("call state"+method);
+					
+					if(call.getState().equals(Call.DEFUALTSTATE)){
+						
+						call.setState(Call.RINGING);
+					}
+				}
 				
+			}
+			else if(statusCode==Response.OK){
+				if(method.equals(Request.INVITE)){
+					processInviteOk(arg0,clientTransaction);
+				}
+				else if(method.equals(Request.BYE)||method.equals(Request.CANCEL)){
+					
+					call.setState(Call.DISCONNECTED);
+					System.out.println("oldState"+call.getOldState());
+					call=null;
+					uasManager.setCall(null);
+					clearText();
+					
+				}
+			}
+			else if(statusCode>=300&&method.equals(Request.INVITE)){
 				call.setState(Call.DISCONNECTED);
-				System.out.println("oldState"+call.getOldState());
 				call=null;
 				uasManager.setCall(null);
-				clearText();
-				
+				new TipFrame("对方正忙");
 			}
+			
+			
 		}
-		else if(statusCode>=300&&method.equals(Request.INVITE)){
-			call.setState(Call.DISCONNECTED);
-			call=null;
-			uasManager.setCall(null);
-			new TipFrame("对方正忙");
-		}
-		
 		
 	}
 	private void processInviteOk(ResponseEvent arg0,ClientTransaction clientTransaction) {
